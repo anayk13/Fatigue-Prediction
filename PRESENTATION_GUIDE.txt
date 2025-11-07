@@ -1,0 +1,175 @@
+======================================================================
+PRESENTATION GUIDE - BASKETBALL FATIGUE MONITOR
+======================================================================
+
+TOTAL TIME: ~15-20 minutes
+
+======================================================================
+PART 1: INTRODUCTION (2-3 minutes)
+======================================================================
+
+1. PROBLEM STATEMENT
+   → Show: Why fatigue prediction matters
+   → Say: "NBA players get injured due to fatigue"
+   → Say: "We need to predict fatigue before it happens"
+
+2. PROJECT OVERVIEW
+   → Show: Project title
+   → Say: "Basketball Player Fatigue and Injury Risk Monitor"
+   → Say: "Uses ML to predict fatigue risk"
+
+3. TECH STACK
+   → Show: Python, Streamlit, scikit-learn, GitHub Actions, Docker
+   → Mention: End-to-end ML + DevOps pipeline
+
+======================================================================
+PART 2: DATA PIPELINE (3-4 minutes)
+======================================================================
+
+4. DATA SOURCE
+   → Show: balldontlie.io API
+   → Say: "Free API, no sign-up required"
+   → Say: "Fetches player stats automatically"
+
+5. DATA INGESTION
+   → Run: python src/data_ingestion.py
+   → Show: Data being fetched/created
+   → Show: data/raw/ folder with CSV files
+
+6. FEATURE ENGINEERING
+   → Run: python src/feature_engineering.py
+   → Show: Features being created
+   → Explain: Rolling averages, advanced stats
+   → Show: data/processed/ folder
+
+======================================================================
+PART 3: ML MODEL (3-4 minutes)
+======================================================================
+
+7. FEATURES EXPLANATION
+   → Show: List of features
+   → Explain key ones:
+     - avg_minutes_last_5 (most important - 35%)
+     - points, rebounds, assists
+     - Advanced stats (TS%, PER, etc.)
+
+8. MODEL TRAINING
+   → Run: python src/train_model.py
+   → Show: Model training output
+   → Highlight: Accuracy (95.5%), ROC-AUC (98.57%)
+   → Show: models/fatigue_model.pkl
+
+9. FEATURE IMPORTANCE
+   → Explain: What matters most
+   → Show: Minutes (35%), Points drop (19%), etc.
+
+======================================================================
+PART 4: FRONTEND DEMO (4-5 minutes)
+======================================================================
+
+10. STREAMLIT APP
+    → Run: streamlit run app.py
+    → Show: Dashboard opens in browser
+
+11. FATIGUE PREDICTION PAGE
+    → Show: Input form
+    → Enter example player stats:
+      - High minutes: 35
+      - Many games: 5
+      - Low points: 15 (performance drop)
+    → Click: "Predict Fatigue Risk"
+    → Show: Results (probability, risk level)
+    → Show: Visualizations (gauge chart)
+
+12. PLAYER COMPARISON
+    → Switch to: "Player Comparison" tab
+    → Enter: Two different players
+    → Show: Side-by-side comparison
+    → Show: Risk difference
+
+13. DATA OVERVIEW
+    → Switch to: "Data Overview" tab
+    → Show: Raw data table
+    → Show: Processed features
+    → Show: Fatigue risk distribution chart
+
+======================================================================
+PART 5: DEVOPS PIPELINE (3-4 minutes)
+======================================================================
+
+14. GITHUB REPOSITORY
+    → Show: GitHub repo
+    → Show: Project structure
+    → Show: All files organized
+
+15. CI/CD PIPELINE
+    → Show: GitHub Actions tab
+    → Show: Workflow file (.github/workflows/ci_cd.yml)
+    → Explain: What happens on push
+
+16. PIPELINE DEMONSTRATION
+    → Option A: Show GitHub Actions running (if available)
+    → Option B: Run locally:
+       ./demo_pipeline.sh
+    → Show: Each step executing
+    → Show: Tests passing
+
+17. DOCKER
+    → Show: Dockerfile
+    → Explain: Containerization
+    → Show: docker build command
+    → Explain: Easy deployment
+
+======================================================================
+PART 6: RESULTS & CONCLUSION (2-3 minutes)
+======================================================================
+
+18. MODEL PERFORMANCE
+    → Show: Metrics
+    → Highlight:
+      - Accuracy: 95.5%
+      - ROC-AUC: 98.57%
+      - F1 Score: 85.25%
+
+19. KEY FEATURES
+    → Show: What makes it good
+    → Mention:
+      - Automated data collection
+      - Advanced statistics
+      - Real-time predictions
+      - CI/CD automation
+
+20. FUTURE IMPROVEMENTS
+    → Mention:
+      - Real-time API integration
+      - Historical injury data
+      - More advanced models
+
+21. Q&A
+    → Be ready for questions
+
+======================================================================
+QUICK REFERENCE - COMMANDS TO RUN
+======================================================================
+
+Before presentation:
+  1. python src/data_ingestion.py
+  2. python src/feature_engineering.py
+  3. python src/train_model.py
+
+During presentation:
+  1. streamlit run app.py
+  2. ./demo_pipeline.sh (optional)
+
+======================================================================
+TIPS FOR PRESENTATION
+======================================================================
+
+✓ Have everything ready before starting
+✓ Test all commands beforehand
+✓ Have backup screenshots if live demo fails
+✓ Explain WHY, not just WHAT
+✓ Show the pipeline working, not just code
+✓ Emphasize: End-to-end automation
+✓ Highlight: Real-world application
+

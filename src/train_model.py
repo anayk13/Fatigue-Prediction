@@ -179,7 +179,7 @@ class ModelTrainer:
         return model, metrics
     
     def train_with_mlflow(self, model_type: str = "random_forest",
-                         **kwargs) -> Tuple, Dict:
+                         **kwargs) -> Tuple[object, Dict]:
         """
         Train model with MLflow logging
         

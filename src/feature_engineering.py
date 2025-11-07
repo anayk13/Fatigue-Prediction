@@ -79,10 +79,15 @@ class FeatureEngineering:
         df['overall_avg_reb'] = grouped['reb'].transform('mean')
         df['overall_avg_ast'] = grouped['ast'].transform('mean')
         
-        # Performance differences from average
+        # Performance differences from average (for comparison)
         df['pts_diff_from_avg'] = df['pts'] - df['overall_avg_pts']
         df['reb_diff_from_avg'] = df['reb'] - df['overall_avg_reb']
         df['ast_diff_from_avg'] = df['ast'] - df['overall_avg_ast']
+        
+        # Also keep raw values for straightforward use
+        df['points'] = df['pts']
+        df['rebounds'] = df['reb']
+        df['assists'] = df['ast']
         
         # Games played in last 7 days (simplified: count games in last 7 rows)
         df['games_played_last_7'] = grouped['game.id'].transform(
@@ -100,8 +105,47 @@ class FeatureEngineering:
         df['fg3_pct'] = df['fg3m'] / (df['fg3a'] + 1)
         df['ft_pct'] = df['ftm'] / (df['fta'] + 1)
         
-        # Plus-minus proxy (points - turnovers)
-        df['efficiency'] = df['pts'] - df['turnover']
+        # Advanced Statistics for Better Fatigue Prediction
+        
+        # 1. True Shooting Percentage (TS%) - Most accurate shooting efficiency
+        # TS% = PTS / (2 * (FGA + 0.44 * FTA))
+        df['true_shooting_pct'] = df['pts'] / (2 * (df['fga'] + 0.44 * df['fta'] + 1))
+        
+        # 2. Effective Field Goal Percentage (eFG%) - Accounts for 3-point value
+        # eFG% = (FGM + 0.5 * 3PM) / FGA
+        df['effective_fg_pct'] = (df['fgm'] + 0.5 * df['fg3m']) / (df['fga'] + 1)
+        
+        # 3. Turnover Rate - Ball handling efficiency (turnovers per 100 possessions proxy)
+        # Lower is better - high turnover rate indicates fatigue
+        df['turnover_rate'] = df['turnover'] / (df['min'] + 1) * 100
+        
+        # 4. Rebound Rate - Effort indicator (rebounds per minute)
+        df['rebound_rate'] = df['reb'] / (df['min'] + 1) * 100
+        
+        # 5. Assist Rate - Playmaking efficiency (assists per minute)
+        df['assist_rate'] = df['ast'] / (df['min'] + 1) * 100
+        
+        # 6. Steals + Blocks Rate - Defensive activity (defensive effort indicator)
+        df['defensive_activity'] = (df['stl'] + df['blk']) / (df['min'] + 1) * 100
+        
+        # 7. Personal Fouls Rate - Discipline/effort indicator
+        df['foul_rate'] = df['pf'] / (df['min'] + 1) * 100
+        
+        # 8. Plus-Minus proxy (Points - Turnovers - Personal Fouls)
+        # Better efficiency metric that accounts for mistakes
+        df['efficiency'] = df['pts'] - df['turnover'] - df['pf']
+        
+        # 9. Player Efficiency Rating (PER) - Simplified version
+        # PER = (PTS + REB + AST + STL + BLK - (FGA - FGM) - (FTA - FTM) - TO) / MIN
+        df['per'] = (
+            df['pts'] + df['reb'] + df['ast'] + df['stl'] + df['blk'] -
+            (df['fga'] - df['fgm']) - (df['fta'] - df['ftm']) - df['turnover']
+        ) / (df['min'] + 1)
+        
+        # 10. Game Pace Proxy - Intensity indicator (total stats per minute)
+        df['game_pace'] = (
+            df['pts'] + df['reb'] + df['ast'] + df['stl'] + df['blk'] + df['turnover']
+        ) / (df['min'] + 1)
         
         return df
     
@@ -191,17 +235,31 @@ class FeatureEngineering:
         Returns:
             DataFrame with final features
         """
-        # Core fatigue indicators
+        # Core fatigue indicators - using straightforward raw values + advanced stats
         feature_cols = [
+            # Workload metrics
             'avg_minutes_last_5',
             'games_played_last_7',
-            'pts_diff_from_avg',
-            'reb_diff_from_avg',
-            'ast_diff_from_avg',
-            'usage_rate',
             'back_to_back_games',
-            'fg_pct',
-            'efficiency'
+            'usage_rate',
+            
+            # Basic performance
+            'points',
+            'rebounds',
+            'assists',
+            
+            # Advanced efficiency metrics
+            'true_shooting_pct',      # Most accurate shooting efficiency
+            'effective_fg_pct',       # Shooting with 3-point adjustment
+            'turnover_rate',          # Ball handling (higher = fatigue)
+            'rebound_rate',           # Effort indicator
+            'assist_rate',            # Playmaking efficiency
+            'defensive_activity',     # Steals + blocks rate
+            'foul_rate',              # Discipline indicator
+            'per',                    # Player Efficiency Rating
+            'game_pace',              # Game intensity
+            'efficiency',             # Overall efficiency
+            'fg_pct'                  # Basic shooting percentage
         ]
         
         # Add PCA features if available

@@ -56,17 +56,29 @@ class FatiguePredictor:
         if self.model is None:
             raise ValueError("Model not loaded")
         
-        # Expected features (in order)
+        # Expected features (in order) - using straightforward names + advanced stats
         expected_features = [
+            # Workload
             'avg_minutes_last_5',
             'games_played_last_7',
-            'pts_diff_from_avg',
-            'reb_diff_from_avg',
-            'ast_diff_from_avg',
-            'usage_rate',
             'back_to_back_games',
-            'fg_pct',
-            'efficiency'
+            'usage_rate',
+            # Basic stats
+            'points',
+            'rebounds',
+            'assists',
+            # Advanced metrics
+            'true_shooting_pct',
+            'effective_fg_pct',
+            'turnover_rate',
+            'rebound_rate',
+            'assist_rate',
+            'defensive_activity',
+            'foul_rate',
+            'per',
+            'game_pace',
+            'efficiency',
+            'fg_pct'
         ]
         
         # Add PCA features if model expects them
@@ -126,17 +138,26 @@ def main():
     """Example usage"""
     predictor = FatiguePredictor()
     
-    # Example prediction
+    # Example prediction - using straightforward values + advanced stats
     example_features = {
         'avg_minutes_last_5': 34,
         'games_played_last_7': 4,
-        'pts_diff_from_avg': -6.2,
-        'reb_diff_from_avg': -1.1,
-        'ast_diff_from_avg': -0.5,
-        'usage_rate': 28.5,
         'back_to_back_games': 1,
-        'fg_pct': 0.42,
-        'efficiency': 12.5
+        'usage_rate': 28.5,
+        'points': 18,
+        'rebounds': 6,
+        'assists': 4,
+        'true_shooting_pct': 0.52,
+        'effective_fg_pct': 0.48,
+        'turnover_rate': 2.5,
+        'rebound_rate': 0.18,
+        'assist_rate': 0.12,
+        'defensive_activity': 0.15,
+        'foul_rate': 0.15,
+        'per': 15.5,
+        'game_pace': 1.2,
+        'efficiency': 12.5,
+        'fg_pct': 0.42
     }
     
     result = predictor.predict(example_features)

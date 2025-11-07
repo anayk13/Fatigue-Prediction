@@ -108,9 +108,19 @@ def show_prediction_page(predictor):
         back_to_back = st.checkbox("Back-to-Back Games", value=False)
         
         st.subheader("Performance Metrics")
-        pts_diff = st.number_input("Points Difference from Average", value=-5.0, step=0.1)
-        reb_diff = st.number_input("Rebounds Difference from Average", value=-1.0, step=0.1)
-        ast_diff = st.number_input("Assists Difference from Average", value=-0.5, step=0.1)
+        points = st.number_input("Points Scored (per game)", value=20, step=1, min_value=0)
+        rebounds = st.number_input("Rebounds (per game)", value=7, step=1, min_value=0)
+        assists = st.number_input("Assists (per game)", value=5, step=1, min_value=0)
+        
+        st.subheader("Additional Stats")
+        turnovers = st.number_input("Turnovers (per game)", value=3, step=1, min_value=0)
+        steals = st.number_input("Steals (per game)", value=1, step=1, min_value=0)
+        blocks = st.number_input("Blocks (per game)", value=1, step=1, min_value=0)
+        personal_fouls = st.number_input("Personal Fouls (per game)", value=2, step=1, min_value=0)
+        fga = st.number_input("Field Goal Attempts (FGA)", value=15, step=1, min_value=0)
+        fgm = st.number_input("Field Goals Made (FGM)", value=7, step=1, min_value=0)
+        fg3m = st.number_input("3-Pointers Made", value=2, step=1, min_value=0)
+        fta = st.number_input("Free Throw Attempts (FTA)", value=5, step=1, min_value=0)
     
     with col2:
         st.subheader("Player Demographics")
@@ -119,9 +129,10 @@ def show_prediction_page(predictor):
         weight = st.number_input("Weight (kg)", 60, 150, 95)
         
         st.subheader("Advanced Metrics")
-        usage_rate = st.slider("Usage Rate", 10.0, 40.0, 25.0, step=0.1)
-        fg_pct = st.slider("Field Goal Percentage", 0.0, 1.0, 0.45, step=0.01)
-        efficiency = st.number_input("Efficiency (Pts - Turnovers)", value=10.0, step=0.1)
+        st.caption("Usage Rate = (FGA + FTA) / Minutes * 100")
+        usage_rate = st.number_input("Usage Rate (%)", value=25.0, step=0.1, min_value=0.0, max_value=100.0, help="How much player is used: (Field Goal Attempts + Free Throw Attempts) / Minutes * 100")
+        fg_pct = st.number_input("Field Goal Percentage (0-1)", value=0.45, step=0.01, min_value=0.0, max_value=1.0, help="Field Goals Made / Field Goal Attempts")
+        efficiency = st.number_input("Efficiency", value=10.0, step=0.1, help="Points - Turnovers - Personal Fouls")
     
     # Predict button
     if st.button("Predict Fatigue Risk", type="primary"):
@@ -129,17 +140,38 @@ def show_prediction_page(predictor):
             st.error("Model not available. Please train the model first.")
             return
         
-        # Prepare features
+        # Calculate advanced metrics from user inputs (no auto-calculation)
+        # These are calculated from what user entered, not auto-generated
+        true_shooting_pct = points / (2 * (fga + 0.44 * fta + 1)) if (fga + fta) > 0 else 0.5
+        effective_fg_pct = (fgm + 0.5 * fg3m) / (fga + 1) if fga > 0 else fg_pct
+        turnover_rate = (turnovers / (avg_minutes + 1)) * 100 if avg_minutes > 0 else 0
+        rebound_rate = (rebounds / (avg_minutes + 1)) * 100 if avg_minutes > 0 else 0
+        assist_rate = (assists / (avg_minutes + 1)) * 100 if avg_minutes > 0 else 0
+        defensive_activity = ((steals + blocks) / (avg_minutes + 1)) * 100 if avg_minutes > 0 else 0
+        foul_rate = (personal_fouls / (avg_minutes + 1)) * 100 if avg_minutes > 0 else 0
+        per = (points + rebounds + assists + steals + blocks - (fga - fgm) - (fta - (fta * 0.75)) - turnovers) / (avg_minutes + 1) if avg_minutes > 0 else 0
+        game_pace = (points + rebounds + assists + steals + blocks + turnovers) / (avg_minutes + 1) if avg_minutes > 0 else 0
+        
+        # Prepare features - using straightforward values + advanced stats
         features = {
             'avg_minutes_last_5': avg_minutes,
             'games_played_last_7': games_last_7,
-            'pts_diff_from_avg': pts_diff,
-            'reb_diff_from_avg': reb_diff,
-            'ast_diff_from_avg': ast_diff,
-            'usage_rate': usage_rate,
             'back_to_back_games': 1 if back_to_back else 0,
-            'fg_pct': fg_pct,
-            'efficiency': efficiency
+            'usage_rate': usage_rate,
+            'points': points,
+            'rebounds': rebounds,
+            'assists': assists,
+            'true_shooting_pct': true_shooting_pct,
+            'effective_fg_pct': effective_fg_pct,
+            'turnover_rate': turnover_rate,
+            'rebound_rate': rebound_rate,
+            'assist_rate': assist_rate,
+            'defensive_activity': defensive_activity,
+            'foul_rate': foul_rate,
+            'per': per,
+            'game_pace': game_pace,
+            'efficiency': efficiency,  # Use user input, not calculated
+            'fg_pct': fg_pct
         }
         
         # Make prediction
@@ -225,42 +257,61 @@ def show_comparison_page(predictor):
         st.subheader("Player 1")
         p1_minutes = st.slider("Avg Minutes (P1)", 0, 48, 32, key="p1_min")
         p1_games = st.slider("Games Last 7 Days (P1)", 0, 7, 4, key="p1_games")
-        p1_pts_diff = st.number_input("Pts Diff (P1)", value=-3.0, step=0.1, key="p1_pts")
+        p1_points = st.number_input("Points (P1)", value=20, step=1, key="p1_pts")
     
     with col2:
         st.subheader("Player 2")
         p2_minutes = st.slider("Avg Minutes (P2)", 0, 48, 28, key="p2_min")
         p2_games = st.slider("Games Last 7 Days (P2)", 0, 7, 3, key="p2_games")
-        p2_pts_diff = st.number_input("Pts Diff (P2)", value=-1.0, step=0.1, key="p2_pts")
+        p2_points = st.number_input("Points (P2)", value=22, step=1, key="p2_pts")
     
     if st.button("Compare Players", type="primary"):
         if predictor is None:
             st.error("Model not available.")
             return
         
-        # Predict for both players
+        # Predict for both players - need all features
+        # Using default values for missing features in comparison
         features_p1 = {
             'avg_minutes_last_5': p1_minutes,
             'games_played_last_7': p1_games,
-            'pts_diff_from_avg': p1_pts_diff,
-            'reb_diff_from_avg': -1.0,
-            'ast_diff_from_avg': -0.5,
-            'usage_rate': 25.0,
             'back_to_back_games': 0,
-            'fg_pct': 0.45,
-            'efficiency': 10.0
+            'usage_rate': 25.0,
+            'points': p1_points,
+            'rebounds': 7,
+            'assists': 5,
+            'true_shooting_pct': 0.50,
+            'effective_fg_pct': 0.45,
+            'turnover_rate': 2.0,
+            'rebound_rate': 0.20,
+            'assist_rate': 0.15,
+            'defensive_activity': 0.10,
+            'foul_rate': 0.10,
+            'per': 15.0,
+            'game_pace': 1.0,
+            'efficiency': 10.0,
+            'fg_pct': 0.45
         }
         
         features_p2 = {
             'avg_minutes_last_5': p2_minutes,
             'games_played_last_7': p2_games,
-            'pts_diff_from_avg': p2_pts_diff,
-            'reb_diff_from_avg': -1.0,
-            'ast_diff_from_avg': -0.5,
-            'usage_rate': 25.0,
             'back_to_back_games': 0,
-            'fg_pct': 0.45,
-            'efficiency': 10.0
+            'usage_rate': 25.0,
+            'points': p2_points,
+            'rebounds': 7,
+            'assists': 5,
+            'true_shooting_pct': 0.50,
+            'effective_fg_pct': 0.45,
+            'turnover_rate': 2.0,
+            'rebound_rate': 0.20,
+            'assist_rate': 0.15,
+            'defensive_activity': 0.10,
+            'foul_rate': 0.10,
+            'per': 15.0,
+            'game_pace': 1.0,
+            'efficiency': 10.0,
+            'fg_pct': 0.45
         }
         
         try:
