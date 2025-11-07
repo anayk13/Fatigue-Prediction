@@ -2,8 +2,54 @@
 
 A complete end-to-end ML project that predicts fatigue and injury risk for NBA players using machine learning and DevOps practices.
 
+## 🚀 Quick Start
+
+### Prerequisites
+- Python 3.10 or higher
+- pip (Python package manager)
+
+### Start the Application (3 Simple Steps)
+
+1. **Install Dependencies**
+   ```bash
+   # Create virtual environment (if not already created)
+   python3 -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   
+   # Install packages
+   pip install -r requirements.txt
+   ```
+
+2. **Run the Pipeline** (to fetch data and train model)
+   ```bash
+   # Option A: Use the automated script
+   bash run_pipeline.sh
+   
+   # Option B: Run manually
+   python src/data_ingestion.py
+   python src/feature_engineering.py
+   python src/train_model.py
+   ```
+
+3. **Start the Streamlit App**
+   ```bash
+   streamlit run app.py
+   ```
+   
+   The app will automatically open in your browser at `http://localhost:8501`
+
+### Alternative: Quick Start Script
+```bash
+# Make script executable (first time only)
+chmod +x run_pipeline.sh
+
+# Run everything
+./run_pipeline.sh && streamlit run app.py
+```
+
 ## 📋 Table of Contents
 
+- [Quick Start](#-quick-start)
 - [Overview](#overview)
 - [Features](#features)
 - [Tech Stack](#tech-stack)
@@ -84,7 +130,8 @@ basketball-fatigue-monitor/
 
 1. **Clone the repository** (or navigate to project directory):
    ```bash
-   cd /Users/anaykumar/Desktop/Fatigue-Prediction
+   git clone <your-repo-url>
+   cd Fatigue-Prediction
    ```
 
 2. **Create a virtual environment** (recommended):
@@ -106,13 +153,12 @@ basketball-fatigue-monitor/
 
 5. **Run the data pipeline**:
    ```bash
-   # Step 1: Fetch data
+   # Option A: Use automated script
+   bash run_pipeline.sh
+   
+   # Option B: Run manually
    python src/data_ingestion.py
-   
-   # Step 2: Process features
    python src/feature_engineering.py
-   
-   # Step 3: Train model
    python src/train_model.py
    ```
 
@@ -122,6 +168,19 @@ basketball-fatigue-monitor/
    ```
 
    The app will open in your browser at `http://localhost:8501`
+
+### Using the Pipeline Script
+
+The `run_pipeline.sh` script automates the entire setup:
+- Creates virtual environment if needed
+- Installs dependencies
+- Runs data ingestion, feature engineering, and model training
+- Provides a summary of generated files
+
+```bash
+chmod +x run_pipeline.sh
+./run_pipeline.sh
+```
 
 ## 📊 Usage
 

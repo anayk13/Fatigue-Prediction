@@ -5,10 +5,8 @@ Basketball Player Fatigue and Injury Risk Monitor Dashboard
 
 import streamlit as st
 import pandas as pd
-import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-from datetime import datetime, timedelta
 import sys
 import os
 
@@ -16,8 +14,6 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
 from src.predict import FatiguePredictor
-from src.data_ingestion import DataIngestion
-from src.feature_engineering import FeatureEngineering
 
 # Page configuration
 st.set_page_config(
@@ -74,24 +70,11 @@ def main():
     st.markdown('<h1 class="main-header">🏀 Basketball Player Fatigue Monitor</h1>', 
                 unsafe_allow_html=True)
     
-    # Sidebar
-    st.sidebar.title("Navigation")
-    page = st.sidebar.radio(
-        "Select Page",
-        ["Fatigue Prediction", "Player Comparison", "Data Overview", "Model Info"]
-    )
-    
     # Load model
     predictor = load_predictor()
     
-    if page == "Fatigue Prediction":
-        show_prediction_page(predictor)
-    elif page == "Player Comparison":
-        show_comparison_page(predictor)
-    elif page == "Data Overview":
-        show_data_overview()
-    elif page == "Model Info":
-        show_model_info()
+    # Show only prediction page
+    show_prediction_page(predictor)
 
 
 def show_prediction_page(predictor):
@@ -244,208 +227,6 @@ def show_prediction_page(predictor):
             
         except Exception as e:
             st.error(f"Prediction error: {e}")
-
-
-def show_comparison_page(predictor):
-    """Player comparison page"""
-    st.header("Player Comparison")
-    st.markdown("Compare fatigue risk between two players over time")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.subheader("Player 1")
-        p1_minutes = st.slider("Avg Minutes (P1)", 0, 48, 32, key="p1_min")
-        p1_games = st.slider("Games Last 7 Days (P1)", 0, 7, 4, key="p1_games")
-        p1_points = st.number_input("Points (P1)", value=20, step=1, key="p1_pts")
-    
-    with col2:
-        st.subheader("Player 2")
-        p2_minutes = st.slider("Avg Minutes (P2)", 0, 48, 28, key="p2_min")
-        p2_games = st.slider("Games Last 7 Days (P2)", 0, 7, 3, key="p2_games")
-        p2_points = st.number_input("Points (P2)", value=22, step=1, key="p2_pts")
-    
-    if st.button("Compare Players", type="primary"):
-        if predictor is None:
-            st.error("Model not available.")
-            return
-        
-        # Predict for both players - need all features
-        # Using default values for missing features in comparison
-        features_p1 = {
-            'avg_minutes_last_5': p1_minutes,
-            'games_played_last_7': p1_games,
-            'back_to_back_games': 0,
-            'usage_rate': 25.0,
-            'points': p1_points,
-            'rebounds': 7,
-            'assists': 5,
-            'true_shooting_pct': 0.50,
-            'effective_fg_pct': 0.45,
-            'turnover_rate': 2.0,
-            'rebound_rate': 0.20,
-            'assist_rate': 0.15,
-            'defensive_activity': 0.10,
-            'foul_rate': 0.10,
-            'per': 15.0,
-            'game_pace': 1.0,
-            'efficiency': 10.0,
-            'fg_pct': 0.45
-        }
-        
-        features_p2 = {
-            'avg_minutes_last_5': p2_minutes,
-            'games_played_last_7': p2_games,
-            'back_to_back_games': 0,
-            'usage_rate': 25.0,
-            'points': p2_points,
-            'rebounds': 7,
-            'assists': 5,
-            'true_shooting_pct': 0.50,
-            'effective_fg_pct': 0.45,
-            'turnover_rate': 2.0,
-            'rebound_rate': 0.20,
-            'assist_rate': 0.15,
-            'defensive_activity': 0.10,
-            'foul_rate': 0.10,
-            'per': 15.0,
-            'game_pace': 1.0,
-            'efficiency': 10.0,
-            'fg_pct': 0.45
-        }
-        
-        try:
-            result_p1 = predictor.predict(features_p1)
-            result_p2 = predictor.predict(features_p2)
-            
-            # Comparison chart
-            comparison_data = pd.DataFrame({
-                'Player': ['Player 1', 'Player 2'],
-                'Fatigue Probability': [
-                    result_p1['fatigue_probability'],
-                    result_p2['fatigue_probability']
-                ],
-                'Risk Level': [result_p1['risk_level'], result_p2['risk_level']]
-            })
-            
-            fig = px.bar(
-                comparison_data,
-                x='Player',
-                y='Fatigue Probability',
-                color='Risk Level',
-                title="Fatigue Risk Comparison",
-                color_discrete_map={
-                    'High': 'red',
-                    'Medium': 'orange',
-                    'Low': 'green'
-                }
-            )
-            st.plotly_chart(fig, use_container_width=True)
-            
-            # Comparison table
-            st.subheader("Detailed Comparison")
-            st.dataframe(comparison_data, use_container_width=True)
-            
-        except Exception as e:
-            st.error(f"Comparison error: {e}")
-
-
-def show_data_overview():
-    """Data overview page"""
-    st.header("Data Overview")
-    st.markdown("View collected and processed data")
-    
-    tab1, tab2 = st.tabs(["Raw Data", "Processed Data"])
-    
-    with tab1:
-        st.subheader("Raw Player Statistics")
-        try:
-            ingestor = DataIngestion()
-            # Try to load most recent raw data
-            raw_files = [f for f in os.listdir(ingestor.data_dir) if f.endswith('.csv')]
-            if raw_files:
-                latest_file = max(raw_files, 
-                                key=lambda f: os.path.getmtime(
-                                    os.path.join(ingestor.data_dir, f)))
-                df_raw = pd.read_csv(os.path.join(ingestor.data_dir, latest_file))
-                st.dataframe(df_raw.head(100), use_container_width=True)
-                st.info(f"Total records: {len(df_raw)}")
-            else:
-                st.warning("No raw data files found. Run data ingestion first.")
-        except Exception as e:
-            st.error(f"Error loading raw data: {e}")
-    
-    with tab2:
-        st.subheader("Processed Features")
-        try:
-            fe = FeatureEngineering()
-            processed_files = [f for f in os.listdir(fe.output_dir) if f.endswith('.csv')]
-            if processed_files:
-                latest_file = max(processed_files,
-                                key=lambda f: os.path.getmtime(
-                                    os.path.join(fe.output_dir, f)))
-                df_processed = pd.read_csv(os.path.join(fe.output_dir, latest_file))
-                st.dataframe(df_processed.head(100), use_container_width=True)
-                st.info(f"Total records: {len(df_processed)}")
-                
-                # Show fatigue risk distribution
-                if 'fatigue_risk' in df_processed.columns:
-                    risk_dist = df_processed['fatigue_risk'].value_counts()
-                    fig = px.pie(
-                        values=risk_dist.values,
-                        names=['No Risk', 'At Risk'],
-                        title="Fatigue Risk Distribution"
-                    )
-                    st.plotly_chart(fig, use_container_width=True)
-            else:
-                st.warning("No processed data files found. Run feature engineering first.")
-        except Exception as e:
-            st.error(f"Error loading processed data: {e}")
-
-
-def show_model_info():
-    """Model information page"""
-    st.header("Model Information")
-    
-    st.subheader("Model Details")
-    st.markdown("""
-    **Model Type:** Random Forest Classifier
-    
-    **Features Used:**
-    - Average minutes (last 5 games)
-    - Games played (last 7 days)
-    - Performance differences from average (points, rebounds, assists)
-    - Usage rate
-    - Back-to-back games indicator
-    - Field goal percentage
-    - Efficiency metrics
-    - PCA components (dimensionality reduction)
-    
-    **Target Variable:**
-    - Fatigue Risk (Binary: 0 = No Risk, 1 = At Risk)
-    
-    **Risk Levels:**
-    - **Low:** Probability < 40%
-    - **Medium:** Probability 40-70%
-    - **High:** Probability > 70%
-    """)
-    
-    # Check if model exists
-    model_path = "models/fatigue_model.pkl"
-    if os.path.exists(model_path):
-        st.success("✓ Model file found")
-        st.info(f"Model location: {model_path}")
-    else:
-        st.warning("⚠ Model file not found. Please train the model first.")
-    
-    # MLflow info
-    st.subheader("MLflow Tracking")
-    mlruns_dir = "./mlruns"
-    if os.path.exists(mlruns_dir):
-        st.success("✓ MLflow tracking enabled")
-        st.info(f"Tracking URI: file:./mlruns")
-    else:
-        st.info("MLflow tracking will be initialized on first model training")
 
 
 if __name__ == "__main__":

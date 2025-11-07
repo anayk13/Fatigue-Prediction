@@ -265,4 +265,29 @@ Predict and monitor basketball players' fatigue and injury risk based on their m
 
 ### 🧠 Bonus:
 Add a “player comparison” tab on the Streamlit dashboard comparing fatigue risk over time between two players.
+Where to Get the Data (Simple Instructions)
+🔹 Option 1: Live Data (balldontlie.io API)
 
+Free, no sign-up.
+
+Example usage in data_ingestion.py:
+
+import requests, pandas as pd
+
+url = "https://www.balldontlie.io/api/v1/stats?per_page=100&seasons[]=2023"
+data = requests.get(url).json()
+df = pd.json_normalize(data["data"])
+df.to_csv("data/raw/stats_2023.csv", index=False)
+
+
+You can call this daily with your GitHub Action to keep updating.
+
+🔹 Option 2: Historical Data (Kaggle)
+
+Dataset: NBA Games Dataset – Kaggle
+
+Download manually once and put in /data/raw/
+
+Use it for training your initial baseline model.
+
+Then combine it with balldontlie for updates.
